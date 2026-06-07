@@ -2,4 +2,89 @@
 > game-support-platform@0.1.0 build
 > next build
 
-sh: 1: next: not found
+▲ Next.js 16.2.7 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.4s
+  Running TypeScript ...
+  Finished TypeScript in 5.7s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/37) ...
+  Generating static pages using 3 workers (9/37) 
+  Generating static pages using 3 workers (18/37) 
+  Generating static pages using 3 workers (27/37) 
+✓ Generating static pages using 3 workers (37/37) in 280ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ○ /admin
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[id]
+├ ƒ /api/articles
+├ ƒ /api/articles/[id]
+├ ƒ /api/articles/[id]/comments
+├ ƒ /api/articles/[id]/media
+├ ƒ /api/articles/[id]/media/[mediaId]
+├ ƒ /api/auth/change-password
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/register
+├ ƒ /api/comments/[id]
+├ ƒ /api/developer/games
+├ ƒ /api/developer/subscriptions
+├ ƒ /api/developer/tickets
+├ ƒ /api/games
+├ ƒ /api/games/[id]
+├ ƒ /api/games/[id]/files
+├ ƒ /api/games/[id]/files/[fileId]
+├ ƒ /api/games/[id]/media
+├ ƒ /api/games/[id]/media/[mediaId]
+├ ƒ /api/games/[id]/reviews
+├ ƒ /api/games/[id]/updates
+├ ƒ /api/games/[id]/updates/[updateId]
+├ ƒ /api/genres
+├ ƒ /api/genres/[id]
+├ ƒ /api/messages
+├ ƒ /api/messages/[id]
+├ ƒ /api/messages/conversation/[id]
+├ ƒ /api/my-tickets
+├ ƒ /api/news
+├ ƒ /api/notifications
+├ ƒ /api/platforms
+├ ƒ /api/subscribe
+├ ƒ /api/subscription-tiers
+├ ƒ /api/subscription-tiers/[id]
+├ ƒ /api/tickets
+├ ƒ /api/tickets/[id]
+├ ƒ /api/upload
+├ ƒ /api/user/follow
+├ ƒ /api/user/followers
+├ ƒ /api/user/profile
+├ ƒ /api/users/search
+├ ○ /developer/dashboard
+├ ○ /developer/tickets
+├ ƒ /games
+├ ƒ /games/[id]
+├ ƒ /games/[id]/edit
+├ ƒ /games/[id]/news
+├ ƒ /games/[id]/subscribe
+├ ƒ /guides
+├ ○ /knowledge
+├ ƒ /knowledge/[id]
+├ ƒ /knowledge/[id]/edit
+├ ○ /login
+├ ○ /messages
+├ ƒ /news
+├ ○ /profile
+├ ○ /register
+└ ƒ /user/[id]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
