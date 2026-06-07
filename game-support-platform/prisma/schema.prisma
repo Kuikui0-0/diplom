@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())               // Уникальный идентификатор пользователя
+  email          String    @unique                                     // Адрес электронной почты, используется для входа и уведомлений
+  name           String                                                // Отображаемое имя пользователя (никнейм)
+  passwordHash   String                                                // Хеш пароля, сгенерированный bcrypt
+  role           String    @default("user")                            // Роль, определяющая права доступа: user, developer, admin
+  createdAt      DateTime  @default(now())                             //
+  isActive       Boolean   @default(true)                              // Флаг блокировки учётной записи(Для администратора)
+  tickets        Ticket[]  @relation("author")                         //
+  assignedTickets Ticket[] @relation("assignee")                       //
+  articles       Article[]                                             //
+  newsPosts      NewsPost[]                                            //
+  subscriptions  Subscription[]                                        //
+  comments Comment[]                                                   //
+  reviews GameReview[]                                                 //
+  notifications Notification[]                                         //
+  avatarUrl String?                                                    //
+  games Game[]                                                         //
+  genres Genre[]                                                       //
+  lastSeenAt DateTime?                                                 // Время последней активности (для отображения статуса)
+  followers  Follow[] @relation("UserFollowing")                       // те, кто подписан на меня (я following)
+  following  Follow[] @relation("UserFollowers")                       // те, на кого я подписан (я follower)
+  age Int?                                                             // Возраст пользователя (для родительского контроля)
+  showFollowers Boolean @default(false)                                // Разрешить другим видеть список подписчиков(По умолчанию True)
+  conversations1 Conversation[] @relation("User1Conversations")        //
+  conversations2 Conversation[] @relation("User2Conversations")        //
+  sentMessages   Message[]      @relation("SentMessages")              //
+}
+
+model Game {
+  id                Int                @id @default(autoincrement())                      // Уникальный ID игры
+  title             String                                                                // Название игры
+  description       String?                                                               // Полное описание игры (поддержка Markdown)
+  mediaUrl          String?                                                               // Главное изображение / обложка
+  authorId          Int?                                                                  //
+  author            User?          @relation(fields: [authorId], references: [id])        //
+  createdAt         DateTime       @default(now())                                        //
+  tickets           Ticket[]                                                              //
+  articles          Article[]                                                             //
+  newsPosts         NewsPost[]                                                            //
+  subscriptionTiers SubscriptionTier[]                                                    //
+  reviews           GameReview[]                                                          //
+  media             GameMedia[]                                                           //
+  gameGenres GameGenre[]                                                                  // 
+  gameFileUrl  String?                                                                    // Ссылка на архив с билдом игры (URL к APK/EXE)
+  gamePlatforms GamePlatform[]                                                            //
+  gameFiles         GameFile[]                                                            //
+  requiredTier String?                                                                    // Минимальный уровень подписки для доступа к игре(null (открыто), "bronze", "silver", "gold")
+  updates   GameUpdate[]                                                                  //           
+}
+
+model Ticket {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  type        String   @default("bug") // bug, feature, question
+  priority    String   @default("medium") // low, medium, high
+  status      String   @default("open") // open, in_progress, resolved, closed
+  createdAt   DateTime @default(now())
+  gameId      Int
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  authorId    Int
+  author      User     @relation("author", fields: [authorId], references: [id])
+  assigneeId  Int?
+  assignee    User?    @relation("assignee", fields: [assigneeId], references: [id])
+  resolution   String?   // описание решения (для статуса resolved)
+  closeReason  String?   // причина закрытия (для статуса closed)
+}
+
+model Article {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  content     String
+  category    String    @default("faq")   // faq, guide, api, news, tutorial
+  mediaUrl    String?
+  gameId      Int?                        // стало необязательным
+  game   Game?  @relation(fields: [gameId], references: [id], onDelete: SetNull)   // если игра может быть null – SetNull, если нет – Cascade
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  comments    Comment[]
+  media ArticleMedia[]
+   subcategory String?   // engine, mechanics, assets
+}
+
+model NewsPost {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  isExclusive Boolean  @default(false)
+  mediaUrl    String?
+  createdAt   DateTime @default(now())
+  gameId      Int
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  authorId    Int
+  author      User     @relation(fields: [authorId], references: [id])
+}
+
+model SubscriptionTier {
+  id            Int            @id @default(autoincrement())
+  name          String
+  price         Float
+  benefits      String
+  maxSlots      Int            @default(100)
+  gameId        Int
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id        Int              @id @default(autoincrement())
+  startDate DateTime         @default(now())
+  endDate   DateTime?
+  status    String           @default("active") // active, cancelled, expired
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id])
+  tierId    Int
+  tier   SubscriptionTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String
+  createdAt DateTime  @default(now())
+  articleId Int?
+  article   Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  authorId  Int
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  Int?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+}
+
+model GameReview {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1-5
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameId Int
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, authorId]) // один отзыв от пользователя на игру
+}
+
+model GameUpdate {
+  id        Int      @id @default(autoincrement())
+  gameId    Int
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  version   String?  // например "v1.2.0"
+  title     String   // "Исправление багов — июнь 2026"
+  content   String   // перечень изменений (plain text или markdown)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // "ticket_status", "comment_reply", "new_subscription"
+  message   String
+  isRead    Boolean  @default(false)
+  relatedId Int?     // id тикета, комментария или подписки
+  createdAt DateTime @default(now())
+}
+
+model Genre {
+  id       Int         @id @default(autoincrement())
+  name     String      @unique
+  authorId Int?
+  author   User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  gameGenres GameGenre[]  
+}
+
+model GameMedia {
+  id     Int    @id @default(autoincrement())
+  url    String
+  type   String @default("image")
+  gameId Int
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+} 
+
+model GameGenre {
+  gameId  Int
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  genreId Int
+  genre   Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, genreId])
+}
+
+model ArticleMedia {
+  id        Int      @id @default(autoincrement())
+  url       String
+  type      String   @default("image") // image / video
+  articleId Int
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+}
+
+model Platform {
+  id        Int             @id @default(autoincrement())
+  name      String          @unique
+  games     GamePlatform[]
+  gameFiles GameFile[]      
+}
+
+model GamePlatform {
+  gameId     Int
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  platformId Int
+  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, platformId])
+}
+
+model GameFile {
+  id         Int      @id @default(autoincrement())
+  url        String
+  platformId Int
+  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  gameId     Int
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  Int
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId Int
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Conversation {
+  id            Int       @id @default(autoincrement())
+  user1Id       Int
+  user1         User      @relation("User1Conversations", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id       Int
+  user2         User      @relation("User2Conversations", fields: [user2Id], references: [id], onDelete: Cascade)
+  lastMessageAt DateTime  @default(now())
+  messages      Message[]
+
+  clearedByUser1 Boolean @default(false)
+  clearedByUser2 Boolean @default(false)
+  deletedByUser1 Boolean @default(false)
+  deletedByUser2 Boolean @default(false)
+
+  @@unique([user1Id, user2Id])
+}
+
+model Message {
+  id             Int            @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int
+  sender         User           @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  text           String?
+  isRead         Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  media          MessageMedia[]
+}
+
+model MessageMedia {
+  id        Int      @id @default(autoincrement())
+  url       String
+  type      String   @default("image") // "image" или "video"
+  messageId Int
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+
+
+
+

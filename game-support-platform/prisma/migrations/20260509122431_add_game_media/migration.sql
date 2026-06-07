@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "GameMedia" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "url" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'image',
+    "gameId" INTEGER NOT NULL,
+    CONSTRAINT "GameMedia_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Game" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);

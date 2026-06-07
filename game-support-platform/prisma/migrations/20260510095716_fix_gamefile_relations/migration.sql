@@ -1,0 +1,9 @@
+-- CreateTable
+CREATE TABLE "GameFile" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "url" TEXT NOT NULL,
+    "platformId" INTEGER NOT NULL,
+    "gameId" INTEGER NOT NULL,
+    CONSTRAINT "GameFile_platformId_fkey" FOREIGN KEY ("platformId") REFERENCES "Platform" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "GameFile_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Game" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
