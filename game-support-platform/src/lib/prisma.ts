@@ -1,16 +1,19 @@
-import { PrismaClient } from '@prisma/client';
+// lib/prisma.ts
+import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
-};
-
-// Расширяем типы globalThis
-declare global {
-  var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
 }
 
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+// Пул соединений будет использовать DATABASE_URL (пулер Supabase, порт 6543)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+})
 
-export default prisma;
+const adapter = new PrismaPg(pool)
 
-if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

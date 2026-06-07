@@ -9,21 +9,21 @@
     "start": "next start"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "5.22",
     "@types/formidable": "^3.5.1",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.10.0",
     "eslint-config-next": "^16.2.7",
     "formidable": "^3.5.4",
     "iron-session": "^8.0.4",
     "next": "^16.2.7",
-    "prisma": "^5.22.0",
+    "prisma": "5.22",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^25.9.2",
+    "@types/pg": "^8.11.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.5.0",
