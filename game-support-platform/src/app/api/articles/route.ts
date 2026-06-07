@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getSession } from '@/lib/session';
+import { Follow } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
