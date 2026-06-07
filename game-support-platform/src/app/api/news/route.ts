@@ -44,12 +44,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession();           // сессия
+  const session = await getSession();           // ← переименовано с gameId на session
+
   if (!session?.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  const { title, content, isExclusive, gameId, mediaUrl } = await request.json();
+  const { title, content, isExclusive, gameId, mediaUrl } = await request.json(); // ← gameId из запроса
 
   if (!gameId) {
     return new Response(JSON.stringify({ error: 'gameId required' }), { status: 400 });
@@ -61,11 +62,10 @@ export async function POST(request: Request) {
       content,
       isExclusive: isExclusive || false,
       gameId: Number(gameId),
-      authorId: session.userId,
-      mediaUrl: mediaUrl || null,   // теперь mediaUrl приходит из запроса
+      authorId: session.userId,        // ← используем session.userId
+      mediaUrl: mediaUrl || null,      // ← если mediaUrl не обязателен, можно убрать
     },
   });
+
   return NextResponse.json(post, { status: 201 });
 }
-
-//fffff
