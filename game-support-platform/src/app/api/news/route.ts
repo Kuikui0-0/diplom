@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: 'gameId required' }), { status: 400 });
   }
 
-  const post = await prisma.newPost.create({
+  const post = await prisma.newsPost.create({
     data: {
       title,
       content,
