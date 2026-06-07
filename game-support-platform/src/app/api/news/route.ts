@@ -45,6 +45,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await getSession();
+  const { gameId, mediaUrl } = body;
   if (!session.userId || session.role !== 'developer') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
