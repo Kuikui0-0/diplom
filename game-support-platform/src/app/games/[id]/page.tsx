@@ -9,7 +9,6 @@ import SubscribeButton from '@/components/SubscribeButton';
 import FollowButton from '@/components/FollowButton';
 import { getSession } from '@/lib/session';
 import GameUpdates from '@/components/GameUpdates';
-import { getTicketStatusLabel, getTicketTypeLabel, getTicketPriorityLabel } from '@/lib/tickets';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,14 +49,14 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
 
   // Проверка на 18+
   const hasAdultGenre = game.gameGenres.some(gg => gg.genre.name === '18+');
-  const userAge = session.age;
+  const userAge = session?.age;
   const adultBlocked = hasAdultGenre && (userAge === undefined || userAge < 18);
 
   const isAuthor = session?.userId === game.authorId;
   const isOwnerOrAdmin = isAuthor || session?.role === 'admin';
 
   let hasAuthorSubscription = false;
-  if (session.userId && game.author && !isAuthor) {
+  if (session?.userId && game.author && !isAuthor) {
     const follow = await prisma.follow.findFirst({
       where: {
         followerId: session.userId,
@@ -68,7 +67,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   }
 
   let userMaxTier: string | null = null;
-  if (session.userId && game.requiredTier && !adultBlocked) {
+  if (session?.userId && game.requiredTier && !adultBlocked) {
     const subscription = await prisma.subscription.findFirst({
       where: {
         userId: session.userId,
@@ -94,13 +93,16 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       hasGameSubscription ||
       hasAuthorSubscription);
 
+  // --- Тикеты: фильтрация и преобразование createdAt (Date -> string) ---
   let visibleTickets = game.tickets;
   if (hasFullAccess) {
-    if (session.userId) {
+    if (session?.userId) {
       const isDeveloper = isAuthor;
       const isAdmin = session.role === 'admin';
       if (!isDeveloper && !isAdmin) {
         visibleTickets = game.tickets.filter(t => t.authorId === session.userId);
+      } else {
+        visibleTickets = game.tickets;
       }
     } else {
       visibleTickets = [];
@@ -109,6 +111,12 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
     visibleTickets = [];
   }
 
+  const ticketsForComponent = visibleTickets.map(ticket => ({
+    ...ticket,
+    createdAt: ticket.createdAt instanceof Date ? ticket.createdAt.toISOString() : ticket.createdAt,
+  }));
+
+  // --- Медиа (без преобразования дат, так как их нет в схеме) ---
   const sortedMedia = [...game.media].sort((a, b) => {
     if (a.type === 'video' && b.type !== 'video') return -1;
     if (a.type !== 'video' && b.type === 'video') return 1;
@@ -197,13 +205,9 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           {hasFullAccess ? (
             <>
               {sortedMedia.length > 0 && <GameGallery media={sortedMedia} />}
-              <TicketSection tickets={visibleTickets} gameId={game.id} />
-              {hasFullAccess && (
-             <>
-                  <GameUpdates gameId={game.id} isOwnerOrAdmin={isOwnerOrAdmin} />
-                  <GameReviewsSection gameId={game.id} />
-            </>
-        )}
+              <TicketSection tickets={ticketsForComponent} gameId={game.id} />
+              <GameUpdates gameId={game.id} isOwnerOrAdmin={isOwnerOrAdmin} />
+              <GameReviewsSection gameId={game.id} />
             </>
           ) : (
             <div className="mt-8 text-gray-500 dark:text-gray-400">

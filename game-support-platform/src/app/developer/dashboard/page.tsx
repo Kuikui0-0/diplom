@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getTicketTypeLabel } from '@/lib/tickets';
 
@@ -125,10 +125,10 @@ function DeveloperTickets() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-left text-gray-500">
-  {['Игра', 'Тема', 'Тип', 'Автор', 'Статус', 'Действия'].map((header) => (
-    <th key={header} className="py-2 pr-4 font-medium">{header}</th>
-  ))}
-</tr>
+                {['Игра', 'Тема', 'Тип', 'Автор', 'Статус', 'Действия'].map((header) => (
+                  <th key={header} className="py-2 pr-4 font-medium">{header}</th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {tickets.map((ticket: any) => (
@@ -136,7 +136,7 @@ function DeveloperTickets() {
                   <tr className="border-b border-gray-100">
                     <td className="py-3 pr-4">{ticket.game?.title || '—'}</td>
                     <td className="py-3 pr-4">{ticket.title}</td>
-                    <td>{getTicketTypeLabel(ticket.type)}</td>
+                    <td className="py-3 pr-4">{getTicketTypeLabel(ticket.type)}</td>
                     <td className="py-3 pr-4">{ticket.author?.name || '—'}</td>
                     <td className="py-3 pr-4">{statusLabels[ticket.status] || ticket.status}</td>
                     <td className="py-3">
@@ -277,21 +277,15 @@ function DeveloperSubscriptions() {
   };
 
   const handleDelete = async (tierId: number) => {
-  if (!confirm('Удалить уровень подписки?')) return;
-
-  const res = await fetch(`/api/subscription-tiers/${tierId}`, {
-    method: 'DELETE',
-  });
-
-  if (res.ok) {
-    // Обновляем список: либо фильтруем state, либо перезагружаем страницу
-    setTiers(prev => prev.filter(t => t.id !== tierId));
-    // ИЛИ: router.refresh(); если используешь Server Components
-  } else {
-    const err = await res.json();
-    alert('Ошибка удаления: ' + (err.error || 'Неизвестно'));
-  }
-};
+    if (!confirm('Удалить уровень подписки?')) return;
+    const res = await fetch(`/api/subscription-tiers/${tierId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setTiers(prev => prev.filter(t => t.id !== tierId));
+    } else {
+      const err = await res.json();
+      alert('Ошибка удаления: ' + (err.error || 'Неизвестно'));
+    }
+  };
 
   return (
     <div>
@@ -370,9 +364,8 @@ function DeveloperSubscriptions() {
   );
 }
 
-
-
-export default function DeveloperDashboard() {
+// 🔹 Компонент, который использует useSearchParams (вынесен для Suspense)
+function DashboardContent() {
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState<'games' | 'tickets' | 'subscriptions'>(
@@ -390,8 +383,7 @@ export default function DeveloperDashboard() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">🛠️ Панель разработчика</h1>
+    <div>
       <div className="flex gap-4 mb-6">
         {(['games', 'tickets', 'subscriptions'] as const).map(tab => (
           <button
@@ -415,6 +407,18 @@ export default function DeveloperDashboard() {
         {activeTab === 'tickets' && <DeveloperTickets />}
         {activeTab === 'subscriptions' && <DeveloperSubscriptions />}
       </div>
+    </div>
+  );
+}
+
+// 🔹 Основной компонент страницы – оборачиваем DashboardContent в Suspense
+export default function DeveloperDashboard() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">🛠️ Панель разработчика</h1>
+      <Suspense fallback={<div className="text-center py-10">Загрузка...</div>}>
+        <DashboardContent />
+      </Suspense>
     </div>
   );
 }

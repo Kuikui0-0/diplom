@@ -137,7 +137,7 @@ export default function CreateGameForm() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Обложка</label>
-          <CoverUploader currentUrl={mediaUrl} onChange={setMediaUrl} />
+          <CoverUploader currentUrl={mediaUrl} onChange={(url) => setMediaUrl(url || '')} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Скриншоты и видео (можно несколько)</label>

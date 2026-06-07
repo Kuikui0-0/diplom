@@ -156,7 +156,7 @@ export default function ProfilePage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Аватар</label>
-            <CoverUploader currentUrl={avatarUrl} onChange={setAvatarUrl} />
+            <CoverUploader currentUrl={avatarUrl} onChange={(url) => setAvatarUrl(url || '')} />
           </div>
           <button type="submit" disabled={uploading}
             className="bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50">

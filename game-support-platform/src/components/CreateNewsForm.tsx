@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+
 export default function CreateNewsForm({ gameId }: { gameId: number }) {
   const [user, setUser] = useState<any>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isExclusive, setIsExclusive] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetch('/api/auth/me')
