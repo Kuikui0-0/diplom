@@ -36,7 +36,7 @@ export default function CreateNewsForm({ gameId }: { gameId: number }) {
   return (
     <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
       <div><label>Заголовок: <input type="text" value={title} onChange={e => setTitle(e.target.value)} required /></label></div>
-      <div><label>Содержание: <textarea value={content} onChange={e => setContent(e.target.value)} required /></textarea></div>
+      <div><label>Содержание: <textarea value={content} onChange={e => setContent(e.target.value)} required /></label></div>
       <div>
         <div>
   <label>Загрузить файл (изображение/видео): 

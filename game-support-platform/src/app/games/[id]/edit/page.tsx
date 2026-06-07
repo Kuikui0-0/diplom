@@ -175,7 +175,7 @@ export default function EditGamePage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Обложка</label>
-          <CoverUploader currentUrl={mediaUrl} onChange={setMediaUrl} />
+          <CoverUploader currentUrl={mediaUrl} onChange={(url) => setMediaUrl(url || '')} />
         </div>
         <fieldset className="border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3">
           <legend className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Скриншоты и видео</legend>
