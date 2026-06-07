@@ -44,21 +44,25 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession();
-  const { gameId, mediaUrl } = body;
-  if (!session.userId || session.role !== 'developer') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const session = await getSession();           // сессия
+  if (!session?.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  const { title, content, isExclusive, gameId } = await request.json();
-  const post = await prisma.newsPost.create({
+  const { title, content, isExclusive, gameId, mediaUrl } = await request.json();
+
+  if (!gameId) {
+    return new Response(JSON.stringify({ error: 'gameId required' }), { status: 400 });
+  }
+
+  const post = await prisma.newPost.create({
     data: {
       title,
       content,
       isExclusive: isExclusive || false,
       gameId: Number(gameId),
       authorId: session.userId,
-      mediaUrl,
+      mediaUrl: mediaUrl || null,   // теперь mediaUrl приходит из запроса
     },
   });
   return NextResponse.json(post, { status: 201 });
