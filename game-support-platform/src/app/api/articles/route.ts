@@ -27,6 +27,7 @@ export async function POST(request: Request) {
   if (!session.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  
 
   let title: string, content: string, category: string, gameId: number | null;
   let description: string | undefined;
@@ -74,18 +75,17 @@ export async function POST(request: Request) {
   // --- Уведомления подписчикам ---
   try {
     const followers = await prisma.follow.findMany({
-      where: { followingId: session.userId },
-      select: { followerId: true },
-    });
+  where: { followingId: session.userId },
+  select: { followerId: true }, // важно!
+  });
 
-    if (followers.length > 0) {
-      const authorName = session.name || 'Автор';
-      const notificationData = followers.map((f) => ({
-        userId: f.followerId,
-        type: 'new_article',
-        message: `${authorName} опубликовал(а) новую статью «${title}»`,
-        relatedId: article.id,
-      }));
+  if (followers.length > 0) {
+    const authorName = session.name || 'Автор';
+    const notificationData = followers.map((f) => ({ // теперь f типизирован автоматически
+    userId: f.followerId,
+    type: 'new_article',
+    message: `${authorName} опубликовал(а) новую статью «${title}»`,
+  }));
 
       await prisma.notification.createMany({ data: notificationData });
     }
