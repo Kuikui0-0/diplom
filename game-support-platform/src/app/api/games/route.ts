@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     },
   });
 
-  //Уведомления подписчикам
+  // Уведомления подписчикам
   try {
     const followers = await prisma.follow.findMany({
       where: { followingId: session.userId },
@@ -63,19 +63,17 @@ export async function POST(request: Request) {
 
     if (followers.length > 0) {
       const authorName = session.name || 'Разработчик';
-      const notificationData = followers.map((f) => ({
+      const notificationData = followers.map((f: { followerId: number }) => ({
         userId: f.followerId,
         type: 'new_game',
         message: `${authorName} выпустил(а) новую игру «${title}»`,
         relatedId: game.id,
       }));
-
       await prisma.notification.createMany({ data: notificationData });
     }
   } catch (error) {
     console.error('Ошибка создания уведомлений об игре:', error);
   }
-  // ---------------------------------
 
   return NextResponse.json(game, { status: 201 });
 }
