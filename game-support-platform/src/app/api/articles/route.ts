@@ -73,26 +73,24 @@ export async function POST(request: Request) {
   });
 
   // --- Уведомления подписчикам ---
-  try {
-    const followers = await prisma.follow.findMany({
-  where: { followingId: session.userId },
-  select: { followerId: true }, // важно!
+try {
+  const followers = await prisma.follow.findMany({
+    where: { followingId: session.userId },
+    select: { followerId: true },
   });
 
   if (followers.length > 0) {
     const authorName = session.name || 'Автор';
-    const notificationData = followers.map((f) => ({ // теперь f типизирован автоматически
-    userId: f.followerId,
-    type: 'new_article',
-    message: `${authorName} опубликовал(а) новую статью «${title}»`,
-  }));
+    const notificationData = followers.map((f: { followerId: number }) => ({
+      userId: f.followerId,
+      type: 'new_article',
+      message: `${authorName} опубликовал(а) новую статью «${title}»`,
+    }));
 
-      await prisma.notification.createMany({ data: notificationData });
-    }
-  } catch (error) {
-    console.error('Ошибка создания уведомлений о статье:', error);
+    await prisma.notification.createMany({ data: notificationData });
   }
-  // ---------------------------------
-
-  return NextResponse.json(article, { status: 201 });
+} catch (error) {
+  console.error('Ошибка создания уведомлений о статье:', error);
 }
+}
+// ---------------------------------
