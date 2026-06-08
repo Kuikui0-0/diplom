@@ -20,6 +20,6 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
-  const list = followers.map(f => f.follower);
+  const list = followers.map((f: { follower: { id: number; name: string; avatarUrl: string | null } }) => f.follower);
   return NextResponse.json(list);
 }
