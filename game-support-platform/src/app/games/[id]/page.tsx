@@ -48,7 +48,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   }
 
   // Проверка на 18+
-  const hasAdultGenre = game.gameGenres.some(gg => gg.genre.name === '18+');
+  const hasAdultGenre = game.gameGenres.some((gg: any) => gg.genre.name === '18+');
   const userAge = session?.age;
   const adultBlocked = hasAdultGenre && (userAge === undefined || userAge < 18);
 
@@ -94,37 +94,37 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       hasAuthorSubscription);
 
   // --- Тикеты: фильтрация и преобразование createdAt (Date -> string) ---
-  let visibleTickets = game.tickets;
-  if (hasFullAccess) {
-    if (session?.userId) {
-      const isDeveloper = isAuthor;
-      const isAdmin = session.role === 'admin';
-      if (!isDeveloper && !isAdmin) {
-        visibleTickets = game.tickets.filter(t => t.authorId === session.userId);
-      } else {
-        visibleTickets = game.tickets;
-      }
+let visibleTickets = game.tickets;
+if (hasFullAccess) {
+  if (session?.userId) {
+    const isDeveloper = isAuthor;
+    const isAdmin = session.role === 'admin';
+    if (!isDeveloper && !isAdmin) {
+      visibleTickets = game.tickets.filter((t: any) => t.authorId === session.userId);
     } else {
-      visibleTickets = [];
+      visibleTickets = game.tickets;
     }
   } else {
     visibleTickets = [];
   }
+} else {
+  visibleTickets = [];
+}
 
-  const ticketsForComponent = visibleTickets.map(ticket => ({
+  const ticketsForComponent = visibleTickets.map((ticket: any) => ({
     ...ticket,
     createdAt: ticket.createdAt instanceof Date ? ticket.createdAt.toISOString() : ticket.createdAt,
   }));
 
   // --- Медиа (без преобразования дат, так как их нет в схеме) ---
-  const sortedMedia = [...game.media].sort((a, b) => {
+  const sortedMedia = [...game.media].sort((a: any, b: any) => {
     if (a.type === 'video' && b.type !== 'video') return -1;
     if (a.type !== 'video' && b.type === 'video') return 1;
     return 0;
   });
 
   const iconUrl = game.mediaUrl || sortedMedia[0]?.url || null;
-  const genreNames = game.gameGenres.map(gg => gg.genre.name).join(', ');
+  const genreNames = game.gameGenres.map((gg: any) => gg.genre.name).join(', ');
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -159,7 +159,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
               <p className="text-gray-700 dark:text-gray-300 mt-2">{game.description}</p>
               {game.gamePlatforms.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {game.gamePlatforms.map(gp => (
+                  {game.gamePlatforms.map((gp: any) => (
                     <span key={gp.platform.id} className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm">
                       {gp.platform.name === 'Android' ? '📱' : '💻'} {gp.platform.name}
                     </span>
@@ -183,7 +183,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
               )}
               {hasFullAccess && game.gameFiles.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
-                  {game.gameFiles.map(file => (
+                  {game.gameFiles.map((file: any) => (
                     <a
                       key={file.id}
                       href={file.url}
