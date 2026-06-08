@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getSession } from '@/lib/session';
+import { NewsPost } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const result = newsPosts.map(post => {
+  const result = newsPosts.map((post: NewsPost & { author: { name: string } }) => {
     if (post.isExclusive && !subscription) {
       return {
         ...post,
