@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { Conversation, User, Message } from '@prisma/client';
 import { getSession } from '@/lib/session';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
@@ -35,7 +36,12 @@ export async function GET() {
 
   // Для каждого диалога считаем непрочитанные
   const result = await Promise.all(
-    conversations.map(async (conv) => {
+  conversations.map(async (conv: Conversation & {
+    user1: Pick<User, 'id' | 'name' | 'avatarUrl'>;
+    user2: Pick<User, 'id' | 'name' | 'avatarUrl'>;
+    messages: Message[];
+    _count: { messages: number };
+  }) => {
       const partner = conv.user1Id === session.userId ? conv.user2 : conv.user1;
       const lastMessage = conv.messages[0] || null;
 
