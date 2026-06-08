@@ -56,7 +56,7 @@ export default async function GuidesPage({
         <p className="text-gray-500 dark:text-gray-400">Гайдов не найдено.</p>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {articles.map((article) => (
+          {articles.map((article: any) => (
             <ArticleCard
               key={article.id}
               id={article.id}
