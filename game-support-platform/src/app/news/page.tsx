@@ -29,7 +29,7 @@ export default async function NewsPage({
         where: { followerId: session.userId },
         select: { followingId: true },
       });
-      const followingIds = follows.map(f => f.followingId);
+      const followingIds = follows.map((f: any) => f.followingId);
       where.authorId = { in: followingIds };
     } else {
       where.authorId = { in: [] };
@@ -75,7 +75,7 @@ export default async function NewsPage({
         <p className="text-gray-500 dark:text-gray-400">Новостей не найдено.</p>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {articles.map((article) => (
+          {articles.map((article: any) => (
             <ArticleCard
               key={article.id}
               id={article.id}
