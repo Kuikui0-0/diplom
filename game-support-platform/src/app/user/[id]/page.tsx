@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';          // ← ДОБАВИЛИ
+import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import FollowButton from '@/components/FollowButton';
 import ExistingChatButton from '@/components/ExistingChatButton';
@@ -60,7 +60,7 @@ export default async function UserProfilePage({
       take: 20,
       orderBy: { createdAt: 'desc' },
     });
-    followersList = followers.map(f => f.follower);
+    followersList = followers.map((f: any) => f.follower);
 
     const following = await prisma.follow.findMany({
       where: { followerId: userId },
@@ -68,7 +68,7 @@ export default async function UserProfilePage({
       take: 20,
       orderBy: { createdAt: 'desc' },
     });
-    followingList = following.map(f => f.following);
+    followingList = following.map((f: any) => f.following);
   }
 
   const isOnline =
@@ -109,7 +109,6 @@ export default async function UserProfilePage({
     });
   }
 
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Шапка профиля */}
@@ -149,8 +148,7 @@ export default async function UserProfilePage({
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
             <FollowButton targetUserId={user.id} />
-            {/* Кнопка сообщения показывается всем, кто не является владельцем профиля */}
-             {session?.userId !== userId && <ExistingChatButton targetUserId={user.id} />}
+            {session?.userId !== userId && <ExistingChatButton targetUserId={user.id} />}
           </div>
         </div>
       </div>
@@ -166,7 +164,7 @@ export default async function UserProfilePage({
               <p className="text-gray-500 dark:text-gray-400 text-sm">Нет подписчиков</p>
             ) : (
               <ul className="space-y-2">
-                {followersList.map(follower => (
+                {followersList.map((follower: any) => (
                   <li key={follower.id} className="flex items-center gap-3">
                     {follower.avatarUrl ? (
                       <img src={follower.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
@@ -189,7 +187,7 @@ export default async function UserProfilePage({
               <p className="text-gray-500 dark:text-gray-400 text-sm">Нет подписок</p>
             ) : (
               <ul className="space-y-2">
-                {followingList.map(following => (
+                {followingList.map((following: any) => (
                   <li key={following.id} className="flex items-center gap-3">
                     {following.avatarUrl ? (
                       <img src={following.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
@@ -215,7 +213,7 @@ export default async function UserProfilePage({
       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Последние статьи</h2>
       {recentArticles.length === 0 && <p className="text-gray-500 dark:text-gray-400 text-sm">Пока нет статей.</p>}
       <ul className="space-y-1 mb-6">
-        {recentArticles.map(article => (
+        {recentArticles.map((article: any) => (
           <li key={article.id}>
             <Link href={`/knowledge/${article.id}`} className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm">
               {article.title}
@@ -230,10 +228,9 @@ export default async function UserProfilePage({
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Последние комментарии</h2>
           {recentComments.length === 0 && <p className="text-gray-500 dark:text-gray-400 text-sm">Пока нет комментариев.</p>}
           <ul className="space-y-2 mb-6">
-            {recentComments.map(comment => (
+            {recentComments.map((comment: any) => (
               <li key={comment.id} className="text-sm text-gray-700 dark:text-gray-300">
-                <span className="text-gray-400 dark:text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>:{' '}
-                {comment.content.substring(0, 80)}...
+                <span className="text-gray-400 dark:text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>: {comment.content.substring(0, 80)}...
                 {comment.article && (
                   <span>
                     {' '}
@@ -249,7 +246,7 @@ export default async function UserProfilePage({
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Последние тикеты</h2>
           {recentTickets.length === 0 && <p className="text-gray-500 dark:text-gray-400 text-sm">Пока нет тикетов.</p>}
           <ul className="space-y-1 mb-6">
-            {recentTickets.map(ticket => (
+            {recentTickets.map((ticket: any) => (
               <li key={ticket.id} className="text-sm text-gray-700 dark:text-gray-300">
                 #{ticket.id} {ticket.title} <span className="text-gray-400 dark:text-gray-500">({ticket.status})</span>
               </li>
