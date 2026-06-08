@@ -37,15 +37,15 @@ export default async function GamesPage({
     orderBy: { createdAt: 'desc' },
   });
 
-  const gamesWithStats = games.map(game => {
-    const ratings = game.reviews.map(r => r.rating);
+  const gamesWithStats = games.map((game: any) => {
+    const ratings = game.reviews.map((r: any) => r.rating);
     const avgRating = ratings.length
-      ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+      ? ratings.reduce((a: any, b: any) => a + b, 0) / ratings.length
       : 0;
-    const prices = game.subscriptionTiers.map(t => t.price);
+    const prices = game.subscriptionTiers.map((t: any) => t.price);
     const minPrice = prices.length ? Math.min(...prices) : null;
 
-    const sortedMedia = [...game.media].sort((a, b) => {
+    const sortedMedia = [...game.media].sort((a: any, b: any) => {
       if (a.type === 'video' && b.type !== 'video') return -1;
       if (a.type !== 'video' && b.type === 'video') return 1;
       return 0;
@@ -53,7 +53,7 @@ export default async function GamesPage({
     const firstMedia = sortedMedia[0];
     const iconUrl = game.mediaUrl || firstMedia?.url || null;
 
-    const genreNames = game.gameGenres.map(gg => gg.genre.name).join(', ');
+    const genreNames = game.gameGenres.map((gg: any) => gg.genre.name).join(', ');
 
     return {
       id: game.id,
@@ -63,7 +63,7 @@ export default async function GamesPage({
       averageRating: avgRating,
       reviewCount: game._count.reviews,
       minSubscriptionPrice: minPrice,
-      platforms: game.gamePlatforms.map(gp => ({ name: gp.platform.name })),
+      platforms: game.gamePlatforms.map((gp: any) => ({ name: gp.platform.name })),
     };
   });
 
@@ -85,7 +85,7 @@ export default async function GamesPage({
         />
         <select name="genre" defaultValue={genre} className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2">
           <option value="">Все жанры</option>
-          {genres.map(g => (
+          {genres.map((g: any) => (
             <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </select>
@@ -101,7 +101,7 @@ export default async function GamesPage({
         <p className="text-gray-500 dark:text-gray-400">Игр не найдено.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {gamesWithStats.map(game => (
+          {gamesWithStats.map((game: any) => (
             <GameCard key={game.id} {...game} />
           ))}
         </div>
