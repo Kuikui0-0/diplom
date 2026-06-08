@@ -1,5 +1,5 @@
 import CreateNewsForm from '@/components/CreateNewsForm';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, NewsPost } from '@prisma/client';
 import Link from 'next/link';
 import { getSession } from '@/lib/session';
 
@@ -46,9 +46,9 @@ export default async function GameNewsPage({ params }: { params: Promise<{ id: s
         <p className="text-gray-500 dark:text-gray-400 mb-8">Новостей пока нет.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {newsPosts.map((post) => {
-            const isLocked = post.isExclusive && !hasSubscription;
-            return (
+          {newsPosts.map((post: NewsPost & { author: { name: string } }) => {
+  const isLocked = post.isExclusive && !hasSubscription;
+  return  (
               <div
                 key={post.id}
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
