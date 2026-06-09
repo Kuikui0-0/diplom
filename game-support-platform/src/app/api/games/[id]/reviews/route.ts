@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getSession } from '@/lib/session';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 // GET — получить отзывы для игры
 export async function GET(

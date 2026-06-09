@@ -1,17 +1,14 @@
-// src/app/api/games/[id]/media/route.ts
+import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-
-const prisma = new PrismaClient();
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
+  // Исправленная проверка роли (было !session.role !== 'developer' – ошибка)
   if (!session.userId || (session.role !== 'developer' && session.role !== 'admin')) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
@@ -21,30 +18,22 @@ export async function POST(
 
   const formData = await request.formData();
   const file = formData.get('file') as File | null;
-
   if (!file) {
     return NextResponse.json({ error: 'No file' }, { status: 400 });
   }
 
-  const type = file.type.startsWith('video/') ? 'video' : 'image';
+  const type = file.type.startsWith('video') ? 'video' : 'image';
 
-  const timestamp = Date.now();
-  const ext = file.name.split('.').pop();
-  const fileName = `${timestamp}-${Math.random().toString(36).substring(2)}.${ext}`;
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, fileName), buffer);
-
-  const url = `/uploads/${fileName}`;
+  // Загружаем в Vercel Blob
+  const blob = await put(`games/${gameId}/${Date.now()}-${file.name}`, file, { access: 'public' });
 
   const media = await prisma.gameMedia.create({
     data: {
       gameId,
-      url,
+      url: blob.url,
       type,
     },
   });
 
-  return NextResponse.json(media, { status: 201 });
+  return NextResponse.json({ media }, { status: 201 });
 }

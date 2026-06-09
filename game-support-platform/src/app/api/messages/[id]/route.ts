@@ -4,7 +4,7 @@ import { getSession } from '@/lib/session';
 import path from 'path';
 import { mkdir, unlink, writeFile } from 'fs/promises';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 // GET – получить информацию о сообщении (опционально)
 export async function GET(

@@ -4,7 +4,7 @@ import { getSession } from '@/lib/session';
 import { unlink } from 'fs/promises';
 import path from 'path';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export async function DELETE(
   request: Request,

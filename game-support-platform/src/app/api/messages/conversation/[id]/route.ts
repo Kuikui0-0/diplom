@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getSession } from '@/lib/session';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 // GET – получить сообщения диалога
 export async function GET(

@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/session';
-import { unlink } from 'fs/promises';
-import path from 'path';
-
-const prisma = new PrismaClient();
+import { del } from '@vercel/blob';
 
 export async function DELETE(
   request: Request,
@@ -25,12 +22,11 @@ export async function DELETE(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // Удаляем файл с диска
-  const filePath = path.join(process.cwd(), 'public', media.url);
+  // Удаляем файл из Blob Storage
   try {
-    await unlink(filePath);
+    await del(media.url);
   } catch (e) {
-    // файл может уже отсутствовать
+    // Если файл уже удалён – игнорируем
   }
 
   await prisma.gameMedia.delete({ where: { id: Number(mediaId) } });
