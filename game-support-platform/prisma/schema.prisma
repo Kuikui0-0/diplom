@@ -1,11 +1,12 @@
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
-  output   = "/app/generated/prisma-client"
 }
+
 model User {
   id             Int       @id @default(autoincrement())               // Уникальный идентификатор пользователя
   email          String    @unique                                     // Адрес электронной почты, используется для входа и уведомлений
