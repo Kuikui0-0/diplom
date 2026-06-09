@@ -103,13 +103,13 @@ export default function GameGallery({ media }: { media: Media[] }) {
           ) : (
             <div className="relative w-full h-full flex items-center justify-center">
               <Image
-                src={media[fullscreenIndex].url}
-                alt=""
-                width={1920}
-                height={1080}
-                className="object-contain max-w-full max-h-full"
-                onError={() => {}}
-              />
+  src={item.url}
+  alt=""
+  fill
+  className="object-cover"
+  unoptimized={true}
+  onError={() => {}}
+/>
             </div>
           )}
         </div>
