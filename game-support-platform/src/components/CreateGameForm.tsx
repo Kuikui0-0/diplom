@@ -146,7 +146,13 @@ export default function CreateGameForm() {
             accept="image/*,video/*"
             multiple
             onChange={e => setFiles(Array.from(e.target.files || []))}
-            className={fileInputClass}
+            className="block w-full text-sm text-gray-900 dark:text-gray-300
+             file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+             file:text-sm file:font-semibold
+             file:bg-indigo-50 dark:file:bg-indigo-900
+             file:text-indigo-700 dark:file:text-indigo-300
+             hover:file:bg-indigo-100 dark:hover:file:bg-indigo-800
+             bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-2"
           />
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
