@@ -146,22 +146,29 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{game.title}</h1>
               {genreNames && <p className="text-gray-500 dark:text-gray-400 mt-1">{genreNames}</p>}
               {game.author && (
-                <div className="flex items-center gap-2 mt-2">
-                  {/* Аватар автора */}
-                  {game.author.avatarUrl ? (
-                    <img src={game.author.avatarUrl} alt={game.author.name} className="w-6 h-6 rounded-full" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs">
-                      {game.author.name.charAt(0)}
-                    </div>
-                  )}
-                  <span className="text-gray-600 dark:text-gray-400">Автор:</span>
-                  <Link href={`/user/${game.author.id}`} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-                    {game.author.name}
-                  </Link>
-                  {!isAuthor && <FollowButton targetUserId={game.author.id} />}
-                </div>
-              )}
+  <div className="flex items-center gap-2 mt-2">
+    {/* Аватар автора */}
+    {game.author.avatarUrl ? (
+      <img
+        src={game.author.avatarUrl}
+        alt={game.author.name}
+        className="w-6 h-6 rounded-full object-cover"
+      />
+    ) : (
+      <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300">
+        {game.author.name.charAt(0).toUpperCase()}
+      </div>
+    )}
+    <span className="text-gray-600 dark:text-gray-400">Автор:</span>
+    <Link
+      href={`/user/${game.author.id}`}
+      className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+    >
+      {game.author.name}
+    </Link>
+    {!isAuthor && <FollowButton targetUserId={game.author.id} />}
+  </div>
+)}
               <p className="text-gray-700 dark:text-gray-300 mt-2">{game.description}</p>
               {game.gamePlatforms.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">

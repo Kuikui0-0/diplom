@@ -3,9 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import ArticleCard from '@/components/ArticleCard';
 import CreateArticleForm from '@/components/CreateArticleForm';
 
+
 export const dynamic = 'force-dynamic';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export default async function GuidesPage({
   searchParams,

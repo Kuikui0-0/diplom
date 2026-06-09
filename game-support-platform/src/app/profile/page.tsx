@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import CoverUploader from '@/components/CoverUploader';
 import { getTicketStatusLabel } from '@/lib/tickets';
+import prisma from '@/lib/prisma';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);

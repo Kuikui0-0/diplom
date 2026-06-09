@@ -6,7 +6,7 @@ import CommentSection from '@/components/CommentSection';
 import GameGallery from '@/components/GameGallery';
 import FollowButton from '@/components/FollowButton';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export default async function ArticlePage({
   params,

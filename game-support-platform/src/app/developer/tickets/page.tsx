@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import DeveloperGames from '@/components/DeveloperGames';
 import DeveloperTickets from '@/components/DeveloperTickets';
 import DeveloperSubscriptions from '@/components/DeveloperSubscriptions';
+import prisma from '@/lib/prisma';
 
 export default function DeveloperDashboard() {
   const [user, setUser] = useState<any>(null);

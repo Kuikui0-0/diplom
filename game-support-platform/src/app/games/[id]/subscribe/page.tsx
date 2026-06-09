@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import prisma from '@/lib/prisma';
 
 export default function SubscribePage() {
   const { id: gameId } = useParams();

@@ -6,6 +6,7 @@ import CoverUploader from '@/components/CoverUploader';
 import PlatformSelect from '@/components/PlatformSelect';
 import MediaUploader from '@/components/MediaUploader';
 import TierSelect from '@/components/TierSelect';
+import prisma from '@/lib/prisma';
 
 interface Media {
   id: number;

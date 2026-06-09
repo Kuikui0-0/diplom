@@ -8,7 +8,7 @@ import { getRoleLabel } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export default async function UserProfilePage({
   params,

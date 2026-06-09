@@ -2,6 +2,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getTicketTypeLabel } from '@/lib/tickets';
+import prisma from '@/lib/prisma';
 
 const statusLabels: Record<string, string> = {
   open: 'Открыт',

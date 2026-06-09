@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import prisma from '@/lib/prisma';
 
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);

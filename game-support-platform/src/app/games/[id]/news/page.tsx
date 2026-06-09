@@ -3,7 +3,7 @@ import { PrismaClient, NewsPost } from '@prisma/client';
 import Link from 'next/link';
 import { getSession } from '@/lib/session';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export default async function GameNewsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

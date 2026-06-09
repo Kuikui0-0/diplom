@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import CoverUploader from '@/components/CoverUploader';
 import MediaUploader from '@/components/MediaUploader';
+import prisma from '@/lib/prisma';
 
 interface Media {
   id: number;

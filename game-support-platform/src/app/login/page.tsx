@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import prisma from '@/lib/prisma';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
