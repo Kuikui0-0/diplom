@@ -11,9 +11,10 @@ export default function CoverUploader({
   const [uploading, setUploading] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlInput, setUrlInput] = useState(currentUrl || '');
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Синхронизируем urlInput с currentUrl при смене пропса
+  // Синхронизация внешнего currentUrl с внутренним состоянием
   useEffect(() => {
     setUrlInput(currentUrl || '');
   }, [currentUrl]);
@@ -23,45 +24,49 @@ export default function CoverUploader({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Пожалуйста, выберите изображение');
+      setError('Пожалуйста, выберите изображение');
       return;
     }
 
     setUploading(true);
+    setError(null);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (res.ok) {
-        const { url } = await res.json();
-        onChange(url);
-        setUrlInput(url);
-      } else {
-        const err = await res.json();
-        alert(`Ошибка загрузки: ${err.error}`);
-      }
-    } catch (err) {
-      alert('Ошибка соединения');
-    }
-    setUploading(false);
+      const data = await res.json();
 
-    // Сбрасываем input, чтобы можно было выбрать тот же файл повторно
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      if (res.ok && data.url) {
+        onChange(data.url);
+        setUrlInput(data.url);
+      } else {
+        throw new Error(data.error || 'Ошибка загрузки');
+      }
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError(err.message || 'Ошибка соединения');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const handleUrlSubmit = () => {
-    if (urlInput.trim()) {
-      onChange(urlInput.trim());
+    const trimmed = urlInput.trim();
+    if (trimmed) {
+      onChange(trimmed);
       setShowUrlInput(false);
+      setError(null);
+    } else {
+      setError('Введите корректный URL');
     }
   };
 
   const handleRemoveCover = () => {
     onChange(null);
     setUrlInput('');
+    setError(null);
   };
 
   return (
@@ -108,6 +113,8 @@ export default function CoverUploader({
           {showUrlInput ? 'Скрыть' : 'или укажите ссылку'}
         </button>
       </div>
+
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
 
       {showUrlInput && (
         <div className="flex items-center gap-2 mt-2">

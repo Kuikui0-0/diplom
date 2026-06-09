@@ -9,22 +9,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Файл не выбран' }, { status: 400 });
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
-    if (!allowedTypes.includes(file.type)) {
+    // Разрешить только изображения для аватара
+    if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'Неподдерживаемый тип файла' }, { status: 400 });
     }
 
-    const maxSize = 10 * 1024 * 1024;
+    const maxSize = 4.5 * 1024 * 1024; // 4.5 МБ – лимит Vercel бесплатного тарифа
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'Файл слишком большой (макс. 10 МБ)' }, { status: 400 });
+      return NextResponse.json({ error: 'Файл слишком большой (макс. 4.5 МБ)' }, { status: 400 });
     }
 
-    // Загружаем в Vercel Blob
-    const blob = await put(file.name, file, { access: 'public' });
-
+    const blob = await put(`covers/${Date.now()}-${file.name}`, file, { access: 'public' });
     return NextResponse.json({ url: blob.url });
   } catch (error: any) {
-    console.error('Ошибка загрузки файла:', error);
+    console.error('Upload error:', error);
     return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
   }
 }
