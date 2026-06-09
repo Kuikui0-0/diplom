@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import Link from 'next/link';
 import DeleteGameButton from '@/components/DeleteGameButton';
 import EditGameButton from '@/components/EditGameButton';
@@ -9,10 +8,9 @@ import SubscribeButton from '@/components/SubscribeButton';
 import FollowButton from '@/components/FollowButton';
 import { getSession } from '@/lib/session';
 import GameUpdates from '@/components/GameUpdates';
+import prisma from '@/lib/prisma'; // глобальный синглтон
 
 export const dynamic = 'force-dynamic';
-
-const prisma = new PrismaClient();
 
 const tierRank: Record<string, number> = {
   bronze: 1,
@@ -93,30 +91,30 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
       hasGameSubscription ||
       hasAuthorSubscription);
 
-  // --- Тикеты: фильтрация и преобразование createdAt (Date -> string) ---
-let visibleTickets = game.tickets;
-if (hasFullAccess) {
-  if (session?.userId) {
-    const isDeveloper = isAuthor;
-    const isAdmin = session.role === 'admin';
-    if (!isDeveloper && !isAdmin) {
-      visibleTickets = game.tickets.filter((t: any) => t.authorId === session.userId);
+  // Тикеты: фильтрация и преобразование
+  let visibleTickets = game.tickets;
+  if (hasFullAccess) {
+    if (session?.userId) {
+      const isDeveloper = isAuthor;
+      const isAdmin = session.role === 'admin';
+      if (!isDeveloper && !isAdmin) {
+        visibleTickets = game.tickets.filter((t: any) => t.authorId === session.userId);
+      } else {
+        visibleTickets = game.tickets;
+      }
     } else {
-      visibleTickets = game.tickets;
+      visibleTickets = [];
     }
   } else {
     visibleTickets = [];
   }
-} else {
-  visibleTickets = [];
-}
 
   const ticketsForComponent = visibleTickets.map((ticket: any) => ({
     ...ticket,
     createdAt: ticket.createdAt instanceof Date ? ticket.createdAt.toISOString() : ticket.createdAt,
   }));
 
-  // --- Медиа (без преобразования дат, так как их нет в схеме) ---
+  // Медиа
   const sortedMedia = [...game.media].sort((a: any, b: any) => {
     if (a.type === 'video' && b.type !== 'video') return -1;
     if (a.type !== 'video' && b.type === 'video') return 1;
@@ -149,6 +147,14 @@ if (hasFullAccess) {
               {genreNames && <p className="text-gray-500 dark:text-gray-400 mt-1">{genreNames}</p>}
               {game.author && (
                 <div className="flex items-center gap-2 mt-2">
+                  {/* Аватар автора */}
+                  {game.author.avatarUrl ? (
+                    <img src={game.author.avatarUrl} alt={game.author.name} className="w-6 h-6 rounded-full" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs">
+                      {game.author.name.charAt(0)}
+                    </div>
+                  )}
                   <span className="text-gray-600 dark:text-gray-400">Автор:</span>
                   <Link href={`/user/${game.author.id}`} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
                     {game.author.name}
