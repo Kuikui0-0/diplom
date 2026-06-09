@@ -31,9 +31,24 @@ export default function GameGallery({ media }: { media: Media[] }) {
     setImgErrors(prev => ({ ...prev, [id]: true }));
   };
 
+  const handleVideoPlay = async (e: React.MouseEvent<HTMLVideoElement>) => {
+    try {
+      await e.currentTarget.play();
+    } catch (err) {
+      // Игнорируем ошибки прерывания
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.warn(err);
+      }
+    }
+  };
+
+  const handleVideoPause = (e: React.MouseEvent<HTMLVideoElement>) => {
+    e.currentTarget.pause();
+  };
+
   return (
     <>
-      {/* Горизонтальная карусель скриншотов */}
+      {/* Горизонтальная карусель */}
       <div className="mt-4 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin">
         {media.map((item, index) => (
           <div
@@ -49,8 +64,8 @@ export default function GameGallery({ media }: { media: Media[] }) {
                 loop
                 playsInline
                 preload="metadata"
-                onMouseEnter={e => (e.target as HTMLVideoElement).play()}
-                onMouseLeave={e => (e.target as HTMLVideoElement).pause()}
+                onMouseEnter={handleVideoPlay}
+                onMouseLeave={handleVideoPause}
               />
             ) : (
               !imgErrors[item.id] ? (
@@ -61,10 +76,9 @@ export default function GameGallery({ media }: { media: Media[] }) {
                   className="object-cover"
                   sizes="(max-width: 640px) 160px, 192px"
                   onError={() => handleImageError(item.id)}
-                  unoptimized={false}
+                  unoptimized // временно для обхода проблем с оптимизацией
                 />
               ) : (
-                // Fallback если картинка не загрузилась
                 <div className="w-full h-full flex items-center justify-center text-gray-500">
                   🖼️
                 </div>
@@ -74,7 +88,7 @@ export default function GameGallery({ media }: { media: Media[] }) {
         ))}
       </div>
 
-      {/* Полноэкранный просмотр */}
+      {/* Полноэкранный режим */}
       {fullscreenIndex !== null && (
         <div
           className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
@@ -103,13 +117,13 @@ export default function GameGallery({ media }: { media: Media[] }) {
           ) : (
             <div className="relative w-full h-full flex items-center justify-center">
               <Image
-  src={item.url}
-  alt=""
-  fill
-  className="object-cover"
-  unoptimized={true}
-  onError={() => {}}
-/>
+                src={media[fullscreenIndex].url}
+                alt=""
+                width={1920}
+                height={1080}
+                className="object-contain max-w-full max-h-full"
+                unoptimized
+              />
             </div>
           )}
         </div>
