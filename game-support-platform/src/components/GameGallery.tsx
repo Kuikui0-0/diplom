@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface Media {
   id: number;
@@ -9,6 +10,7 @@ interface Media {
 
 export default function GameGallery({ media }: { media: Media[] }) {
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
 
   if (media.length === 0) return null;
 
@@ -25,6 +27,10 @@ export default function GameGallery({ media }: { media: Media[] }) {
     setFullscreenIndex(prev => (prev === media.length - 1 ? 0 : prev! + 1));
   };
 
+  const handleImageError = (id: number) => {
+    setImgErrors(prev => ({ ...prev, [id]: true }));
+  };
+
   return (
     <>
       {/* Горизонтальная карусель скриншотов */}
@@ -32,7 +38,7 @@ export default function GameGallery({ media }: { media: Media[] }) {
         {media.map((item, index) => (
           <div
             key={item.id}
-            className="flex-shrink-0 w-40 sm:w-48 h-24 sm:h-28 rounded-lg overflow-hidden cursor-pointer snap-start bg-black"
+            className="relative flex-shrink-0 w-40 sm:w-48 h-24 sm:h-28 rounded-lg overflow-hidden cursor-pointer snap-start bg-gray-200 dark:bg-gray-700"
             onClick={() => openFullscreen(index)}
           >
             {item.type === 'video' ? (
@@ -42,11 +48,27 @@ export default function GameGallery({ media }: { media: Media[] }) {
                 muted
                 loop
                 playsInline
+                preload="metadata"
                 onMouseEnter={e => (e.target as HTMLVideoElement).play()}
                 onMouseLeave={e => (e.target as HTMLVideoElement).pause()}
               />
             ) : (
-              <img src={item.url} alt="" className="w-full h-full object-cover" />
+              !imgErrors[item.id] ? (
+                <Image
+                  src={item.url}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 160px, 192px"
+                  onError={() => handleImageError(item.id)}
+                  unoptimized={false}
+                />
+              ) : (
+                // Fallback если картинка не загрузилась
+                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                  🖼️
+                </div>
+              )
             )}
           </div>
         ))}
@@ -75,14 +97,20 @@ export default function GameGallery({ media }: { media: Media[] }) {
             <video
               src={media[fullscreenIndex].url}
               controls
+              autoFocus
               className="max-w-full max-h-full"
             />
           ) : (
-            <img
-              src={media[fullscreenIndex].url}
-              alt=""
-              className="max-w-full max-h-full object-contain"
-            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={media[fullscreenIndex].url}
+                alt=""
+                width={1920}
+                height={1080}
+                className="object-contain max-w-full max-h-full"
+                onError={() => {}}
+              />
+            </div>
           )}
         </div>
       )}
