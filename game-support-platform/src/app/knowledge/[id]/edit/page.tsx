@@ -119,7 +119,7 @@ export default function EditArticlePage() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Категория</label>
           <select value={category} onChange={e => { setCategory(e.target.value); setSubcategory(''); }} className={inputClass}>
             <option value="news">Новости</option>
-            <option value="game_news">Новости про игру</option>
+            <option value="game_news">Новости мира игр</option>
             <option value="guide">Гайды</option>
           </select>
         </div>
