@@ -10,7 +10,8 @@
   
     
   "postinstall": "prisma generate",
-  
+
+  "seed": "ts-node prisma/seed.ts",
     
   "dev": "next dev",
   
@@ -35,7 +36,6 @@
   
     
   "bcryptjs": "^3.0.3",
-  
     
   "eslint-config-next": "^16.2.7",
   

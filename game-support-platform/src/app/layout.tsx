@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import QuickMenu from "@/components/QuickMenu";
 import "./globals.css";
-import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: "Game Support Platform",
