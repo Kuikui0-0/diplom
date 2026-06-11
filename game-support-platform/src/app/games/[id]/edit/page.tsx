@@ -56,52 +56,81 @@ export default function EditGamePage() {
       .catch(() => setLoading(false));
   }, [gameId]);
 
-  const handlePlatformFileChange = (platformId: number, file: File | null) => {
-    setPlatformFiles(prev => ({ ...prev, [platformId]: file }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
+  e.preventDefault();
+  if (!user) return;
 
-    // Загрузка новых файлов для каждой платформы
-    for (const platformId of platformIds) {
-      const file = platformFiles[platformId];
-      if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('platformId', String(platformId));
-        const uploadRes = await fetch(`/api/games/${gameId}/files`, {
-          method: 'POST',
-          body: formData,
-        });
-        if (!uploadRes.ok) {
-          console.error(`Ошибка загрузки файла для платформы ${platformId}`);
-        }
+  // 1. Загрузка новых файлов через прямые PUT-запросы
+  for (const platformId of platformIds) {
+    const file = platformFiles[platformId];
+    if (!file) continue;
+
+    try {
+      // Шаг 1: получить подписанный URL
+      const urlRes = await fetch(`/api/games/${gameId}/files/upload-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          platformId,
+        }),
+      });
+      if (!urlRes.ok) {
+        throw new Error('Failed to get upload URL');
       }
-    }
+      const { uploadUrl, blobUrl } = await urlRes.json();
 
-    // Обновление основной информации об игре
-    const res = await fetch(`/api/games/${gameId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        description,
-        genreIds,
-        platformIds,
-        mediaUrl,
-        requiredTier,
-      }),
-    });
+      // Шаг 2: загрузить файл напрямую в Blob
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+      if (!uploadRes.ok) {
+        throw new Error(`Upload failed: ${uploadRes.status}`);
+      }
 
-    if (res.ok) {
-      router.push(`/games/${gameId}`);
-    } else {
-      const err = await res.json();
-      setMessage(`Ошибка: ${err.error || 'Ошибка сервера'}`);
+      // Шаг 3: сохранить метаданные в базе данных
+      const saveRes = await fetch(`/api/games/${gameId}/files`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: blobUrl,
+          platformId,
+        }),
+      });
+      if (!saveRes.ok) {
+        throw new Error('Failed to save file metadata');
+      }
+    } catch (err) {
+      console.error(`Ошибка загрузки файла для платформы ${platformId}:`, err);
+      setMessage(`Ошибка загрузки файла: ${err.message}`);
     }
-  };
+  }
+
+  // 2. Обновление остальных данных игры (без файлов)
+  const res = await fetch(`/api/games/${gameId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title,
+      description,
+      genreIds,
+      platformIds,
+      mediaUrl,
+      requiredTier,
+    }),
+  });
+
+  if (res.ok) {
+    router.push(`/games/${gameId}`);
+  } else {
+    const err = await res.json();
+    setMessage(`Ошибка: ${err.error || 'Ошибка сервера'}`);
+  }
+};
 
   const uploadNewMedia = async (files: File[]) => {
     for (const f of files) {
