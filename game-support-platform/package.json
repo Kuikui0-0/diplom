@@ -10,8 +10,6 @@
   
     
   "postinstall": "prisma generate",
-
-  "seed": "ts-node prisma/seed.ts",
     
   "dev": "next dev",
   
@@ -19,7 +17,9 @@
   "build": "next build",
   
     
-  "start": "next start"
+  "start": "next start",
+
+  "seed": "ts-node prisma/seed.ts"
   
   },
   
