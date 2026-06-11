@@ -56,81 +56,91 @@ export default function EditGamePage() {
       .catch(() => setLoading(false));
   }, [gameId]);
 
+  const handlePlatformFileChange = (platformId: number, file: File | null) => {
+    setPlatformFiles(prev => ({ ...prev, [platformId]: file }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!user) return;
+    e.preventDefault();
+    if (!user) return;
 
-  // 1. Загрузка новых файлов через прямые PUT-запросы
-  for (const platformId of platformIds) {
-    const file = platformFiles[platformId];
-    if (!file) continue;
+    // 1. Загрузка новых файлов через прямые PUT-запросы
+    for (const platformId of platformIds) {
+      const file = platformFiles[platformId];
+      if (!file) continue;
 
+      try {
+        // Шаг 1: получить подписанный URL
+        const urlRes = await fetch(`/api/games/${gameId}/files/upload-url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            platformId,
+          }),
+        });
+        if (!urlRes.ok) {
+          throw new Error('Failed to get upload URL');
+        }
+        const { uploadUrl, blobUrl } = await urlRes.json();
+
+        // Шаг 2: загрузить файл напрямую в Blob
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+        if (!uploadRes.ok) {
+          throw new Error(`Upload failed: ${uploadRes.status}`);
+        }
+
+        // Шаг 3: сохранить метаданные в базе данных
+        const saveRes = await fetch(`/api/games/${gameId}/files`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: blobUrl,
+            platformId,
+          }),
+        });
+        if (!saveRes.ok) {
+          throw new Error('Failed to save file metadata');
+        }
+      } catch (err) {
+        console.error(`Ошибка загрузки файла для платформы ${platformId}:`, err);
+        const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+        setMessage(`Ошибка загрузки файла: ${errorMessage}`);
+      }
+    }
+
+    // 2. Обновление остальных данных игры (без файлов)
     try {
-      // Шаг 1: получить подписанный URL
-      const urlRes = await fetch(`/api/games/${gameId}/files/upload-url`, {
-        method: 'POST',
+      const res = await fetch(`/api/games/${gameId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filename: file.name,
-          platformId,
+          title,
+          description,
+          genreIds,
+          platformIds,
+          mediaUrl,
+          requiredTier,
         }),
       });
-      if (!urlRes.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-      const { uploadUrl, blobUrl } = await urlRes.json();
 
-      // Шаг 2: загрузить файл напрямую в Blob
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
-      if (!uploadRes.ok) {
-        throw new Error(`Upload failed: ${uploadRes.status}`);
-      }
-
-      // Шаг 3: сохранить метаданные в базе данных
-      const saveRes = await fetch(`/api/games/${gameId}/files`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: blobUrl,
-          platformId,
-        }),
-      });
-      if (!saveRes.ok) {
-        throw new Error('Failed to save file metadata');
+      if (res.ok) {
+        router.push(`/games/${gameId}`);
+      } else {
+        const err = await res.json();
+        setMessage(`Ошибка: ${err.error || 'Ошибка сервера'}`);
       }
     } catch (err) {
-      console.error(`Ошибка загрузки файла для платформы ${platformId}:`, err);
-      setMessage(`Ошибка загрузки файла: ${err.message}`);
+      const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+      setMessage(`Ошибка сохранения игры: ${errorMessage}`);
     }
-  }
-
-  // 2. Обновление остальных данных игры (без файлов)
-  const res = await fetch(`/api/games/${gameId}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title,
-      description,
-      genreIds,
-      platformIds,
-      mediaUrl,
-      requiredTier,
-    }),
-  });
-
-  if (res.ok) {
-    router.push(`/games/${gameId}`);
-  } else {
-    const err = await res.json();
-    setMessage(`Ошибка: ${err.error || 'Ошибка сервера'}`);
-  }
-};
+  };
 
   const uploadNewMedia = async (files: File[]) => {
     for (const f of files) {
