@@ -42,17 +42,5 @@ next-env.d.ts
 
 /src/generated/prisma
 
-*.db
-*.sqlite
-*.sqlite-journal
 
-# Папка для загруженных файлов (если использовали локальное хранилище)
-/public/uploads
-
-# Логи Prisma Studio
-prisma/studio.log
-
-# Временные файлы редактора (если не указаны глобально)
-.vscode/
-.idea/
 
