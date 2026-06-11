@@ -29,15 +29,19 @@ export async function POST(
     return NextResponse.json({ error: 'Filename and platformId are required' }, { status: 400 });
   }
 
-  // Генерируем подписанный URL для прямой загрузки
-  const blob = await put(`games/${gameId}/platforms/${platformId}/${filename}`, {
-    access: 'public',
-    addRandomSuffix: true,
-  });
+  // Генерируем подписанный URL для прямой загрузки (передаём пустое тело)
+  const blob = await put(
+    `games/${gameId}/platforms/${platformId}/${filename}`,
+    '', // пустое тело, так как мы только получаем URL
+    {
+      access: 'public',
+      addRandomSuffix: true,
+    }
+  );
 
   // Возвращаем URL, по которому клиент может загрузить файл методом PUT
   return NextResponse.json({
     uploadUrl: blob.url,
-    blobUrl: blob.url, // это готовый публичный URL после загрузки
+    blobUrl: blob.url,
   });
 }
