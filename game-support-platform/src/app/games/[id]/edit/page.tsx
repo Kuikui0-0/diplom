@@ -6,7 +6,6 @@ import CoverUploader from '@/components/CoverUploader';
 import PlatformSelect from '@/components/PlatformSelect';
 import MediaUploader from '@/components/MediaUploader';
 import TierSelect from '@/components/TierSelect';
-import prisma from '@/lib/prisma';
 
 interface Media {
   id: number;
@@ -65,20 +64,24 @@ export default function EditGamePage() {
     e.preventDefault();
     if (!user) return;
 
-    // Загрузка новых файлов платформ
+    // Загрузка новых файлов для каждой платформы
     for (const platformId of platformIds) {
       const file = platformFiles[platformId];
       if (file) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('platformId', String(platformId));
-        await fetch(`/api/games/${gameId}/files`, { method: 'POST', body: formData });
-        // После цикла for (const platformId of platformIds) ... добавьте:
-const updatedGame = await fetch(`/api/games/${gameId}`).then(r => r.json());
-setGameFiles(updatedGame.gameFiles || []);
+        const uploadRes = await fetch(`/api/games/${gameId}/files`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (!uploadRes.ok) {
+          console.error(`Ошибка загрузки файла для платформы ${platformId}`);
+        }
       }
     }
 
+    // Обновление основной информации об игре
     const res = await fetch(`/api/games/${gameId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
