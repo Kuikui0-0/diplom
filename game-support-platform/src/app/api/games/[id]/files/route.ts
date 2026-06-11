@@ -1,10 +1,7 @@
+import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getSession } from '@/lib/session';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/session';
 
 export async function POST(
   request: Request,
@@ -18,6 +15,7 @@ export async function POST(
   const { id } = await params;
   const gameId = Number(id);
 
+  // Проверка, что пользователь — автор игры или админ
   const game = await prisma.game.findUnique({
     where: { id: gameId },
     select: { authorId: true },
@@ -34,27 +32,20 @@ export async function POST(
     return NextResponse.json({ error: 'Файл и платформа обязательны' }, { status: 400 });
   }
 
-  const timestamp = Date.now();
-  const ext = file.name.split('.').pop();
-  const fileName = `${timestamp}-${Math.random().toString(36).substring(2)}.${ext}`;
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, fileName), buffer);
-
-  const url = `/uploads/${fileName}`;
+  // Загружаем файл в Vercel Blob
+  const blob = await put(`games/${gameId}/platforms/${platformId}/${file.name}`, file, {
+    access: 'public',
+  });
 
   // Удаляем старый файл для этой платформы, если есть
-  const existing = await prisma.gameFile.findFirst({
+  await prisma.gameFile.deleteMany({
     where: { gameId, platformId },
   });
-  if (existing) {
-    await prisma.gameFile.delete({ where: { id: existing.id } });
-  }
 
+  // Сохраняем запись в базе данных
   const gameFile = await prisma.gameFile.create({
     data: {
-      url,
+      url: blob.url,
       platformId,
       gameId,
     },

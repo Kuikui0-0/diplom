@@ -73,6 +73,9 @@ export default function EditGamePage() {
         formData.append('file', file);
         formData.append('platformId', String(platformId));
         await fetch(`/api/games/${gameId}/files`, { method: 'POST', body: formData });
+        // После цикла for (const platformId of platformIds) ... добавьте:
+const updatedGame = await fetch(`/api/games/${gameId}`).then(r => r.json());
+setGameFiles(updatedGame.gameFiles || []);
       }
     }
 
