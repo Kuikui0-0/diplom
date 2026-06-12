@@ -64,12 +64,13 @@ export default function EditGamePage() {
     e.preventDefault();
     if (!user) return;
 
-    // 1. Загрузка новых файлов
+    // 1. Загрузка файлов через обычный POST
     for (const platformId of platformIds) {
       const file = platformFiles[platformId];
       if (!file) continue;
 
       try {
+        // Проверка размера (4.5 МБ)
         if (file.size > 4.5 * 1024 * 1024) {
           throw new Error('Файл слишком большой. Максимум 4.5 МБ');
         }
@@ -85,7 +86,7 @@ export default function EditGamePage() {
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.error || 'Ошибка загрузки файла');
+          throw new Error(err.error || 'Ошибка загрузки');
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
