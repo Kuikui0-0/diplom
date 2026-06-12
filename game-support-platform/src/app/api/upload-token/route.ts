@@ -4,7 +4,6 @@ import { getSession } from '@/lib/session';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const session = await getSession();
-
   if (!session?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -28,29 +27,31 @@ export async function POST(request: Request): Promise<NextResponse> {
           throw new Error('Missing required fields in clientPayload');
         }
 
-        // Аутентификация и авторизация уже проверены выше
+        // Здесь можно добавить дополнительные проверки прав доступа
         return {
           allowedContentTypes: [
+            'application/octet-stream',
+            'application/x-msdownload',      // для .exe
+            'application/vnd.android.package-archive', // для .apk
             'application/zip',
-            'application/x-msdownload',
-            'application/vnd.android.package-archive',
+            'application/x-msi',
           ],
-          addRandomSuffix: true,
+          addRandomSuffix: false, // сохраняет исходное имя файла
           tokenPayload: JSON.stringify({ userId: session.userId, gameId, platformId }),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Этот колбэк вызывается Vercel Blob после успешной загрузки
-        // Здесь можно обновить базу данных, но мы уже сохраняем URL в клиенте
-        console.log('blob upload completed', blob, tokenPayload);
+        // Здесь можно добавить логирование или дополнительные действия (например, сохранить URL в БД)
+        console.log('Upload completed:', blob.url, tokenPayload);
       },
     });
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
+    console.error('Upload token error:', error);
     return NextResponse.json(
       { error: (error as Error).message },
-      { status: 400 },
+      { status: 400 }
     );
   }
 }
