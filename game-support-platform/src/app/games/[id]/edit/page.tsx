@@ -64,13 +64,12 @@ export default function EditGamePage() {
     e.preventDefault();
     if (!user) return;
 
-    // 1. Загрузка файлов (POST) – только новые выбранные файлы
+    // 1. Загрузка новых файлов
     for (const platformId of platformIds) {
       const file = platformFiles[platformId];
       if (!file) continue;
 
       try {
-        // Проверка размера (4.5 МБ)
         if (file.size > 4.5 * 1024 * 1024) {
           throw new Error('Файл слишком большой. Максимум 4.5 МБ');
         }
@@ -94,7 +93,7 @@ export default function EditGamePage() {
       }
     }
 
-    // 2. Обновление остальных данных игры
+    // 2. Обновление остальных данных
     try {
       const res = await fetch(`/api/games/${gameId}`, {
         method: 'PATCH',
