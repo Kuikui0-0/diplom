@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { upload } from '@vercel/blob/client';
 import GenreMultiSelect from '@/components/GenreMultiSelect';
 import CoverUploader from '@/components/CoverUploader';
 import PlatformSelect from '@/components/PlatformSelect';
@@ -64,49 +65,37 @@ export default function EditGamePage() {
     e.preventDefault();
     if (!user) return;
 
-    // 1. Загрузка новых файлов через прямые PUT-запросы
+    // 1. Клиентская загрузка файлов напрямую в Blob Storage (обходит лимит 4.5 МБ)
     for (const platformId of platformIds) {
       const file = platformFiles[platformId];
       if (!file) continue;
 
       try {
-        // Шаг 1: получить подписанный URL
-        const urlRes = await fetch(`/api/games/${gameId}/files/upload-url`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: file.name,
+        const newBlob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload-token',
+          clientPayload: JSON.stringify({
+            gameId,
             platformId,
+            filename: file.name,
           }),
-        });
-        if (!urlRes.ok) {
-          throw new Error('Failed to get upload URL');
-        }
-        const { uploadUrl, blobUrl } = await urlRes.json();
-
-        // Шаг 2: загрузить файл напрямую в Blob
-        const uploadRes = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
+          onUploadProgress: (progress) => {
+            console.log(`Загрузка для платформы ${platformId}: ${progress.percentage}%`);
           },
         });
-        if (!uploadRes.ok) {
-          throw new Error(`Upload failed: ${uploadRes.status}`);
-        }
 
-        // Шаг 3: сохранить метаданные в базе данных
+        // Сохраняем метаданные в базе данных
         const saveRes = await fetch(`/api/games/${gameId}/files`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            url: blobUrl,
+            url: newBlob.url,
             platformId,
           }),
         });
+
         if (!saveRes.ok) {
-          throw new Error('Failed to save file metadata');
+          throw new Error('Не удалось сохранить информацию о файле');
         }
       } catch (err) {
         console.error(`Ошибка загрузки файла для платформы ${platformId}:`, err);
