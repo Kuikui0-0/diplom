@@ -15,43 +15,33 @@ export async function POST(request: Request): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
-        let payload;
-        try {
-          payload = typeof clientPayload === 'string' ? JSON.parse(clientPayload) : clientPayload;
-        } catch {
-          payload = {};
+        let payload = {};
+        if (clientPayload) {
+          try {
+            payload = JSON.parse(clientPayload as string);
+          } catch {
+            payload = {};
+          }
         }
-
-        const { gameId, platformId, filename } = payload;
+        const { gameId, platformId, filename } = payload as any;
         if (!filename || !gameId || !platformId) {
           throw new Error('Missing required fields in clientPayload');
         }
-
-        // Здесь можно добавить дополнительные проверки прав доступа
+        // Разрешить любые типы файлов (для отладки) – потом можно сузить
         return {
-          allowedContentTypes: [
-            'application/octet-stream',
-            'application/x-msdownload',      // для .exe
-            'application/vnd.android.package-archive', // для .apk
-            'application/zip',
-            'application/x-msi',
-          ],
-          addRandomSuffix: false, // сохраняет исходное имя файла
+          allowedContentTypes: ['*/*'],
           tokenPayload: JSON.stringify({ userId: session.userId, gameId, platformId }),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Здесь можно добавить логирование или дополнительные действия (например, сохранить URL в БД)
-        console.log('Upload completed:', blob.url, tokenPayload);
+        // Опционально: сохранить URL в БД, но мы это делаем в клиенте
+        console.log(`File uploaded: ${blob.url}`);
       },
     });
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
     console.error('Upload token error:', error);
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
 }
