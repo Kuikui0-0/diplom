@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { upload } from '@vercel/blob/client';
 import GenreMultiSelect from '@/components/GenreMultiSelect';
 import CoverUploader from '@/components/CoverUploader';
 import PlatformSelect from '@/components/PlatformSelect';
@@ -65,46 +64,37 @@ export default function EditGamePage() {
     e.preventDefault();
     if (!user) return;
 
-    // 1. Клиентская загрузка файлов напрямую в Blob Storage (обходит лимит 4.5 МБ)
+    // 1. Загрузка новых файлов через обычный POST
     for (const platformId of platformIds) {
       const file = platformFiles[platformId];
       if (!file) continue;
 
       try {
-        const newBlob = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/upload-token',
-          clientPayload: JSON.stringify({
-            gameId,
-            platformId,
-            filename: file.name,
-          }),
-          onUploadProgress: (progress) => {
-            console.log(`Загрузка для платформы ${platformId}: ${progress.percentage}%`);
-          },
-        });
+        // Проверка размера (4.5 МБ)
+        if (file.size > 4.5 * 1024 * 1024) {
+          throw new Error('Файл слишком большой. Максимум 4.5 МБ');
+        }
 
-        // Сохраняем метаданные в базе данных
-        const saveRes = await fetch(`/api/games/${gameId}/files`, {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('platformId', String(platformId));
+
+        const res = await fetch(`/api/games/${gameId}/files`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: newBlob.url,
-            platformId,
-          }),
+          body: formData,
         });
 
-        if (!saveRes.ok) {
-          throw new Error('Не удалось сохранить информацию о файле');
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Ошибка загрузки');
         }
       } catch (err) {
-        console.error(`Ошибка загрузки файла для платформы ${platformId}:`, err);
-        const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
-        setMessage(`Ошибка загрузки файла: ${errorMessage}`);
+        const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
+        setMessage(`Ошибка: ${msg}`);
       }
     }
 
-    // 2. Обновление остальных данных игры (без файлов)
+    // 2. Обновление остальных данных
     try {
       const res = await fetch(`/api/games/${gameId}`, {
         method: 'PATCH',
@@ -126,8 +116,8 @@ export default function EditGamePage() {
         setMessage(`Ошибка: ${err.error || 'Ошибка сервера'}`);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
-      setMessage(`Ошибка сохранения игры: ${errorMessage}`);
+      const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
+      setMessage(`Ошибка: ${msg}`);
     }
   };
 
