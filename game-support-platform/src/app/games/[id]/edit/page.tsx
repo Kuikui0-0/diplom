@@ -64,7 +64,7 @@ export default function EditGamePage() {
     e.preventDefault();
     if (!user) return;
 
-    // 1. Загрузка новых файлов через обычный POST
+    // 1. Загрузка файлов (POST) – только новые выбранные файлы
     for (const platformId of platformIds) {
       const file = platformFiles[platformId];
       if (!file) continue;
@@ -86,7 +86,7 @@ export default function EditGamePage() {
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.error || 'Ошибка загрузки');
+          throw new Error(err.error || 'Ошибка загрузки файла');
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
@@ -94,7 +94,7 @@ export default function EditGamePage() {
       }
     }
 
-    // 2. Обновление остальных данных
+    // 2. Обновление остальных данных игры
     try {
       const res = await fetch(`/api/games/${gameId}`, {
         method: 'PATCH',
