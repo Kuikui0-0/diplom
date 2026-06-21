@@ -28,7 +28,7 @@ export default function CreateNewsForm({ gameId }: { gameId: number }) {
     setMessage('');
 
     try {
-      // 1. Создаём статью (новость об игре)
+      // Отправляем данные на единый API для статей
       const res = await fetch('/api/articles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,28 +38,26 @@ export default function CreateNewsForm({ gameId }: { gameId: number }) {
           category: 'game_news',
           gameId,
           authorId: user.userId,
-          isExclusive, // если поле есть в схеме Article
+          // isExclusive — если в схеме Article нет этого поля, его нельзя передавать!
+          // Если есть — раскомментируйте:
+          // isExclusive,
         }),
       });
 
+      // Читаем тело ответа (текст или JSON)
+      const text = await res.text();
+
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Ошибка создания новости');
-      }
-
-      const article = await res.json();
-
-      // 2. Если выбран файл, загружаем его как медиа
-      if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const mediaRes = await fetch(`/api/articles/${article.id}/media`, {
-          method: 'POST',
-          body: formData,
-        });
-        if (!mediaRes.ok) {
-          console.warn('Медиа не загружено, но новость создана');
+        // Пытаемся распарсить ошибку, если это JSON
+        let errorMsg = 'Неизвестная ошибка';
+        try {
+          const err = JSON.parse(text);
+          errorMsg = err.error || err.message || errorMsg;
+        } catch {
+          // Если не JSON, используем сырой текст (обрезаем до 100 символов)
+          errorMsg = text || res.statusText || `Ошибка ${res.status}`;
         }
+        throw new Error(errorMsg);
       }
 
       // Успешно — перезагружаем страницу, чтобы обновить список новостей
@@ -73,7 +71,7 @@ export default function CreateNewsForm({ gameId }: { gameId: number }) {
 
   if (user === null) return <p className="text-gray-500 dark:text-gray-400">Загрузка...</p>;
   if (!user || (user.role !== 'developer' && user.role !== 'admin')) {
-    return null; // скрываем для обычных пользователей и гостей
+    return null;
   }
 
   const inputClass =
