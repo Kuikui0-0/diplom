@@ -108,7 +108,7 @@ export default async function GamesPage({
       )}
 
       <div className="mt-12">
-        <CreateGameForm />
+        <CreateGameForm />qsqsqsqs
       </div>
     </div>
   );
