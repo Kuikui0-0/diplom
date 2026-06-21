@@ -13,7 +13,7 @@ export async function POST(
   }
   const { id } = await params;
   const gameId = Number(id);
-  // Проверка прав (автор или админ)
+
   const game = await prisma.game.findUnique({
     where: { id: gameId },
     select: { authorId: true },
@@ -30,17 +30,15 @@ export async function POST(
     return NextResponse.json({ error: 'Файл и платформа обязательны' }, { status: 400 });
   }
 
-  // Ограничение размера (4.5 МБ)
   if (file.size > 4.5 * 1024 * 1024) {
     return NextResponse.json({ error: 'Файл слишком большой (макс. 4.5 МБ)' }, { status: 400 });
   }
 
-  // Загрузка в Vercel Blob
+  // Исправлен путь: обратные кавычки, правильные переменные
   const blob = await put(`games/${gameId}/platforms/${platformId}/${file.name}`, file, {
     access: 'public',
   });
 
-  // Удаляем старый файл для этой платформы (если есть)
   await prisma.gameFile.deleteMany({ where: { gameId, platformId } });
   const gameFile = await prisma.gameFile.create({
     data: {
@@ -50,5 +48,6 @@ export async function POST(
     },
   });
 
+  // Исправлен возврат
   return NextResponse.json(gameFile, { status: 201 });
 }
