@@ -178,18 +178,30 @@ export default function EditGamePage() {
           </div>
         ))}
         {platformIds.map(pid => (
-          <div key={pid}>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Новый файл для {pid === 1 ? 'Android (APK/ZIP/RAR)' : 'PC (EXE/ZIP/RAR)'}
-            </label>
-            <input
-              type="file"
-              accept="*/*"
-              onChange={e => handlePlatformFileChange(pid, e.target.files?.[0] || null)}
-              className={fileInputClass}
-            />
-          </div>
-        ))}
+  <div key={pid}>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Новый файл для {pid === 1 ? 'Android (APK)' : 'PC (EXE/ZIP/RAR)'}
+    </label>
+    <div className="flex items-center gap-3">
+      <label
+        htmlFor={`file-${pid}`}
+        className="cursor-pointer bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium py-2 px-4 rounded-lg border border-indigo-200 dark:border-indigo-700 transition text-sm"
+      >
+        Выбрать файл
+      </label>
+      <span className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+        {platformFiles[pid] ? platformFiles[pid]!.name : 'Файл не выбран'}
+      </span>
+      <input
+        id={`file-${pid}`}
+        type="file"
+        accept={pid === 1 ? '.apk' : '.exe,.msi'}
+        onChange={e => handlePlatformFileChange(pid, e.target.files?.[0] || null)}
+        className="hidden"
+      />
+    </div>
+  </div>
+))}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Доступность игры</label>
           <TierSelect value={requiredTier} onChange={setRequiredTier} />
