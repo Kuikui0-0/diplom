@@ -36,7 +36,6 @@ export async function DELETE(
   try {
     await del(file.url);
   } catch (e) {
-    // Если файл уже удалён или ошибка – игнорируем
     console.warn('Ошибка удаления файла из Blob:', e);
   }
 
