@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { upload } from '@vercel/blob/client';
 import GenreMultiSelect from '@/components/GenreMultiSelect';
 import CoverUploader from '@/components/CoverUploader';
 import PlatformSelect from '@/components/PlatformSelect';
@@ -64,37 +65,47 @@ export default function EditGamePage() {
     e.preventDefault();
     if (!user) return;
 
-    // 1. Загрузка файлов через обычный POST
+    // 1. Клиентская загрузка файлов напрямую в Blob (обходит лимит 4.5 МБ)
     for (const platformId of platformIds) {
       const file = platformFiles[platformId];
       if (!file) continue;
 
       try {
-        // Проверка размера (4.5 МБ)
-        if (file.size > 4.5 * 1024 * 1024) {
-          throw new Error('Файл слишком большой. Максимум 4.5 МБ');
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('platformId', String(platformId));
-
-        const res = await fetch(`/api/games/${gameId}/files`, {
-          method: 'POST',
-          body: formData,
+        // Загружаем файл напрямую в Blob Storage
+        const newBlob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload-token',
+          clientPayload: JSON.stringify({
+            gameId,
+            platformId,
+            filename: file.name,
+          }),
+          onUploadProgress: (progress) => {
+            console.log(`Загрузка для платформы ${platformId}: ${progress.percentage}%`);
+          },
         });
 
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Ошибка загрузки');
+        // Сохраняем метаданные в базе данных
+        const saveRes = await fetch(`/api/games/${gameId}/files`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: newBlob.url,
+            platformId,
+          }),
+        });
+
+        if (!saveRes.ok) {
+          throw new Error('Не удалось сохранить информацию о файле');
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
-        setMessage(`Ошибка: ${msg}`);
+        console.error(`Ошибка загрузки файла для платформы ${platformId}:`, err);
+        const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+        setMessage(`Ошибка загрузки файла: ${errorMessage}`);
       }
     }
 
-    // 2. Обновление остальных данных
+    // 2. Обновление остальных данных игры (без файлов)
     try {
       const res = await fetch(`/api/games/${gameId}`, {
         method: 'PATCH',
@@ -116,8 +127,8 @@ export default function EditGamePage() {
         setMessage(`Ошибка: ${err.error || 'Ошибка сервера'}`);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Неизвестная ошибка';
-      setMessage(`Ошибка: ${msg}`);
+      const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+      setMessage(`Ошибка сохранения игры: ${errorMessage}`);
     }
   };
 
@@ -178,30 +189,18 @@ export default function EditGamePage() {
           </div>
         ))}
         {platformIds.map(pid => (
-  <div key={pid}>
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-  Файл для {pid === 1 ? 'Android (APK/ZIP/RAR)' : 'PC (EXE/ZIP/RAR)'}
-</label>
-    <div className="flex items-center gap-3">
-      <label
-        htmlFor={`file-${pid}`}
-        className="cursor-pointer bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium py-2 px-4 rounded-lg border border-indigo-200 dark:border-indigo-700 transition text-sm"
-      >
-        Выбрать файл
-      </label>
-      <span className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-        {platformFiles[pid] ? platformFiles[pid]!.name : 'Файл не выбран'}
-      </span>
-      <input
-        id={`file-${pid}`}
-        type="file"
-        accept="*/*"
-        onChange={e => handlePlatformFileChange(pid, e.target.files?.[0] || null)}
-        className="hidden"
-      />
-    </div>
-  </div>
-))}
+          <div key={pid}>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Новый файл для {pid === 1 ? 'Android (APK/ZIP/RAR)' : 'PC (EXE/ZIP/RAR)'}
+            </label>
+            <input
+              type="file"
+              accept="*/*"
+              onChange={e => handlePlatformFileChange(pid, e.target.files?.[0] || null)}
+              className={fileInputClass}
+            />
+          </div>
+        ))}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Доступность игры</label>
           <TierSelect value={requiredTier} onChange={setRequiredTier} />
