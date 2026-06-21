@@ -15,7 +15,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
-        // Проверка прав и получение данных из clientPayload
         let payload = {};
         if (clientPayload) {
           try {
@@ -29,16 +28,13 @@ export async function POST(request: Request): Promise<NextResponse> {
           throw new Error('Missing required fields in clientPayload');
         }
 
-        // Возвращаем настройки для загрузки
         return {
-          allowedContentTypes: ['*/*'], // Можно ограничить по типу
+          allowedContentTypes: ['*/*'],
           tokenPayload: JSON.stringify({ userId: session.userId, gameId, platformId }),
-          // Для больших файлов рекомендуется включить multipart
-          multipart: true, // Включает многокомпонентную загрузку для больших файлов[reference:5]
+          multipart: true,
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Опционально: можно сохранить URL в БД, но лучше сделать это на клиенте
         console.log('File uploaded:', blob.url);
       },
     });
