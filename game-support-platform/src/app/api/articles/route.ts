@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getSession } from '@/lib/session';
-
 import prisma from '@/lib/prisma';
 
 export async function GET(request: Request) {
@@ -26,7 +24,6 @@ export async function POST(request: Request) {
   if (!session.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  
 
   let title: string, content: string, category: string, gameId: number | null;
   let description: string | undefined;
@@ -58,6 +55,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Заголовок и содержание обязательны' }, { status: 400 });
   }
 
+  // Создаём статью
   const article = await prisma.article.create({
     data: {
       title,
@@ -71,25 +69,28 @@ export async function POST(request: Request) {
     },
   });
 
-  // --- Уведомления подписчикам ---
-try {
-  const followers = await prisma.follow.findMany({
-    where: { followingId: session.userId },
-    select: { followerId: true },
-  });
+  // --- Уведомления подписчикам (не блокируем основной ответ) ---
+  try {
+    const followers = await prisma.follow.findMany({
+      where: { followingId: session.userId },
+      select: { followerId: true },
+    });
 
-  if (followers.length > 0) {
-    const authorName = session.name || 'Автор';
-    const notificationData = followers.map((f: { followerId: number }) => ({
-      userId: f.followerId,
-      type: 'new_article',
-      message: `${authorName} опубликовал(а) новую статью «${title}»`,
-    }));
+    if (followers.length > 0) {
+      const authorName = session.name || 'Автор';
+      const notificationData = followers.map((f: { followerId: number }) => ({
+        userId: f.followerId,
+        type: 'new_article',
+        message: `${authorName} опубликовал(а) новую статью «${title}»`,
+      }));
 
-    await prisma.notification.createMany({ data: notificationData });
+      await prisma.notification.createMany({ data: notificationData });
+    }
+  } catch (error) {
+    console.error('Ошибка создания уведомлений о статье:', error);
+    // Уведомления не критичны — не прерываем выполнение
   }
-} catch (error) {
-  console.error('Ошибка создания уведомлений о статье:', error);
+
+  // ✅ ВАЖНО: возвращаем созданную статью
+  return NextResponse.json(article, { status: 201 });
 }
-}
-// ---------------------------------
