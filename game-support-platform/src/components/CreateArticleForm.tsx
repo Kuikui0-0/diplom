@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CoverUploader from './CoverUploader';
 
 interface Game {
@@ -25,6 +25,7 @@ export default function CreateArticleForm({
   const [gameId, setGameId] = useState<number | null>(null);
   const [games, setGames] = useState<Game[]>([]);
   const [message, setMessage] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -36,7 +37,16 @@ export default function CreateArticleForm({
   }, []);
 
   const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFiles(Array.from(e.target.files || []));
+    const selected = e.target.files;
+    if (selected) {
+      setFiles(Array.from(selected));
+    } else {
+      setFiles([]);
+    }
+    // Сбрасываем значение, чтобы можно было выбрать те же файлы повторно
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const removeFile = (index: number) => {
@@ -98,7 +108,6 @@ export default function CreateArticleForm({
   if (!user) return <p className="text-gray-500">Для создания статьи <a href="/login" className="text-indigo-600 hover:underline">войдите</a>.</p>;
 
   const inputClass = "mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500 transition-colors";
-  const fileInputClass = "mt-1 block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 dark:file:bg-indigo-900 file:text-indigo-700 dark:file:text-indigo-200 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-800 transition-colors cursor-pointer";
 
   return (
     <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
@@ -164,9 +173,35 @@ export default function CreateArticleForm({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Обложка</label>
           <CoverUploader currentUrl={mediaUrl} onChange={(url) => setMediaUrl(url || '')} />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Изображения и видео</label>
-          <input type="file" accept="image/*,video/*" multiple onChange={handleFilesChange} className={fileInputClass} />
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors
+                         bg-indigo-50 dark:bg-indigo-900/30
+                         border-indigo-200 dark:border-indigo-700
+                         text-indigo-700 dark:text-indigo-300
+                         hover:bg-indigo-100 dark:hover:bg-indigo-900/50
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              Выбрать файлы
+            </button>
+            <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-xs">
+              {files.length > 0 ? `${files.length} файлов` : 'Файлы не выбраны'}
+            </span>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            onChange={handleFilesChange}
+            className="hidden"
+          />
+
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {files.map((file, index) => (
@@ -184,6 +219,7 @@ export default function CreateArticleForm({
             </div>
           )}
         </div>
+
         <button type="submit" className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
           Опубликовать
         </button>

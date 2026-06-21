@@ -140,7 +140,7 @@ export default function CreateGameForm() {
           <CoverUploader currentUrl={mediaUrl} onChange={(url) => setMediaUrl(url || '')} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Скриншоты и видео (можно несколько)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Изображения и видео</label>
           <input
             type="file"
             accept="image/*,video/*"
