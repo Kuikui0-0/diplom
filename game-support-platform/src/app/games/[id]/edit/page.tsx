@@ -180,8 +180,8 @@ export default function EditGamePage() {
         {platformIds.map(pid => (
   <div key={pid}>
     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-      Новый файл для {pid === 1 ? 'Android (APK)' : 'PC (EXE)'}
-    </label>
+  Файл для {pid === 1 ? 'Android (APK/ZIP/RAR)' : 'PC (EXE/ZIP/RAR)'}
+</label>
     <div className="flex items-center gap-3">
       <label
         htmlFor={`file-${pid}`}
@@ -195,7 +195,7 @@ export default function EditGamePage() {
       <input
         id={`file-${pid}`}
         type="file"
-        accept={pid === 1 ? '.apk' : '.exe,.msi'}
+        accept="*/*"
         onChange={e => handlePlatformFileChange(pid, e.target.files?.[0] || null)}
         className="hidden"
       />
