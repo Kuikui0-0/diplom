@@ -1,10 +1,7 @@
+import { del } from '@vercel/blob';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getSession } from '@/lib/session';
-import { unlink } from 'fs/promises';
-import path from 'path';
-
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/session';
 
 export async function DELETE(
   request: Request,
@@ -16,33 +13,27 @@ export async function DELETE(
   }
 
   const { id, mediaId } = await params;
-  const gameId = Number(id);
+  const articleId = Number(id);
 
-  const game = await prisma.game.findUnique({
-    where: { id: gameId },
-    select: { authorId: true },
+  const media = await prisma.articleMedia.findUnique({
+    where: { id: Number(mediaId) },
+    include: { article: { select: { authorId: true } } },
   });
-  if (!game) return NextResponse.json({ error: 'Игра не найдена' }, { status: 404 });
-
-  // Разрешаем автору игры или админу
-  if (session.role !== 'admin' && session.userId !== game.authorId) {
+  if (!media || media.articleId !== articleId) {
+    return NextResponse.json({ error: 'Media not found' }, { status: 404 });
+  }
+  if (media.article.authorId !== session.userId && session.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const media = await prisma.gameMedia.findUnique({
-    where: { id: Number(mediaId) },
-    select: { url: true, gameId: true },
-  });
-  if (!media || media.gameId !== gameId) {
-    return NextResponse.json({ error: 'Медиа не найдено' }, { status: 404 });
+  // Удаляем из Blob
+  try {
+    await del(media.url);
+  } catch (e) {
+    console.warn('Ошибка удаления из Blob:', e);
   }
 
-  const filePath = path.join(process.cwd(), 'public', media.url);
-  try {
-    await unlink(filePath);
-  } catch (e) {}
-
-  await prisma.gameMedia.delete({ where: { id: Number(mediaId) } });
+  await prisma.articleMedia.delete({ where: { id: Number(mediaId) } });
 
   return NextResponse.json({ success: true });
 }

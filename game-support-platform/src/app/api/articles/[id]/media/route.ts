@@ -1,10 +1,7 @@
+import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getSession } from '@/lib/session';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-
 import prisma from '@/lib/prisma';
+import { getSession } from '@/lib/session';
 
 export async function POST(
   request: Request,
@@ -18,37 +15,37 @@ export async function POST(
   const { id } = await params;
   const articleId = Number(id);
 
-  // Проверим, что пользователь имеет право редактировать эту статью (автор или админ)
+  // Проверяем, существует ли статья и имеет ли пользователь права
   const article = await prisma.article.findUnique({
     where: { id: articleId },
     select: { authorId: true },
   });
-  if (!article) return NextResponse.json({ error: 'Статья не найдена' }, { status: 404 });
-  if (session.role !== 'admin' && session.userId !== article.authorId) {
+  if (!article) {
+    return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+  }
+  if (article.authorId !== session.userId && session.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const formData = await request.formData();
   const file = formData.get('file') as File | null;
   if (!file) {
-    return NextResponse.json({ error: 'Файл не выбран' }, { status: 400 });
+    return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
   }
 
-  const type = file.type.startsWith('video/') ? 'video' : 'image';
-  const timestamp = Date.now();
-  const ext = file.name.split('.').pop();
-  const fileName = `${timestamp}-${Math.random().toString(36).substring(2)}.${ext}`;
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, fileName), buffer);
+  // Определяем тип медиа
+  const type = file.type.startsWith('video') ? 'video' : 'image';
 
-  const url = `/uploads/${fileName}`;
+  // Загружаем в Vercel Blob
+  const blob = await put(`articles/${articleId}/${Date.now()}-${file.name}`, file, {
+    access: 'public',
+  });
 
+  // Сохраняем запись в базе данных
   const media = await prisma.articleMedia.create({
     data: {
       articleId,
-      url,
+      url: blob.url,
       type,
     },
   });
